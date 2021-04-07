@@ -7,7 +7,7 @@
     <title>User | Online Forum</title>
 </head>
 <body>
-    <form action="/changePassword">
+    <form action="/changePassword" method="POST">
         <script>
             document.getElementById('changePassword').onclick = function () {
                 location.href = "/changePassword"
@@ -24,6 +24,9 @@
         <div>
             <button id="changePassword">Change Password</button>
         </div>
+        <div>
+            <b><%= message %></b>
+        </div>
     </form>
     <form action="/user" method="POST">
         <hr>
@@ -34,6 +37,7 @@
                     <%= doc.data().message; %> <br>
                     <%= doc.data().username; %> <br>
                     <%= doc.data().timestamp.toDate(); %> <br>
+                    <button id="<%= doc.id %>">Edit</button>
                     <br><br>
                 <% }); %>
             <% } %>

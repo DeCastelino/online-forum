@@ -4,6 +4,7 @@ const app = express();
 const admin = require("firebase-admin");
 const serviceAccount = require("./ServiceAccountKey.json");
 const session = require('express-session');
+const { response } = require("express");
 
 app.use(session({ secret: 'secret', saveUninitialized: true, resave: false }));
 
@@ -136,7 +137,11 @@ app.post('/userArea', (req, res) => {
 })
 
 app.get('/user', (req, res) => {
-  res.render('user.ejs');
+  db.collection('posts').where( 'username', '==', req.session.username).orderBy('timestamp').get().then((response) => {
+    if (response != null) {
+      res.render('user.ejs', { message: " ", response });
+    }
+  });
 });
 
 app.post('/user', (req, res) => {
@@ -144,16 +149,19 @@ app.post('/user', (req, res) => {
 });
 
 // called when user click change password from user page
-app.get('/changePassword', (req, res) => {
-  db.collection('users').where('username', '==', req.session.username).where('password', '==', req.body.password).then((response) => {
+app.post('/changePassword', (req, res) => {
+  db.collection('users').where('username', '==', req.session.username).where('password', '==', req.body.oldPassword).get().then((response) => {
     if (response != null) {
       response.forEach(doc => {
-        userID: doc.data().userID,
-        username: doc.data().username,
-        password: req.body.newPassword
+        db.collection('users').doc(doc.id).update({
+          password: req.body.newPassword
+        })
       })
+      res.redirect('login');
+    } else {
+      res.render('user.ejs', { message: "Old Password is incorrect", response: null })
     }
-  })
+  });
 });
 
 app.use(express.static("public"));
