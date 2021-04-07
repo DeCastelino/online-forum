@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User | Online Forum</title>
+</head>
+<body>
+    <form action="/changePassword">
+        <script>
+            document.getElementById('changePassword').onclick = function () {
+                location.href = "/changePassword"
+            }
+        </script>
+        <div>
+            <label for="oldPassword">Old Password: </label>
+            <input type="password" id="oldPassword" name="oldPassword" required>
+        </div>
+        <div>
+            <label for="newPassword">New Password: </label>
+            <input type="password" id="newPassword" name="newPassword" required>
+        </div>
+        <div>
+            <button id="changePassword">Change Password</button>
+        </div>
+    </form>
+    <form action="/user" method="POST">
+        <hr>
+        <div>
+            <% if (response != null) { %>
+                <% response.forEach(doc => { %>
+                    <b><%= doc.data().subject; %></b> <br>
+                    <%= doc.data().message; %> <br>
+                    <%= doc.data().username; %> <br>
+                    <%= doc.data().timestamp.toDate(); %> <br>
+                    <br><br>
+                <% }); %>
+            <% } %>
+        </div>
+        <hr>
+    </form>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Area | Online Forum</title>
+</head>
+<body>
+    <form action="/userArea" method="POST">
+        <div class="sidenav">
+            <a href="/user"><%= username %></a>
+            <button type="logout" id="logout">Logout</button>
+            <script>
+                document.getElementById('logout').onclick = function () {
+                    location.href = "/login"
+                }
+            </script>
+        </div>
+        <hr>
+        <div>
+            <% if (response != null) { %>
+                <% response.forEach(doc => { %>
+                    <b><%= doc.data().subject; %></b> <br>
+                    <%= doc.data().message; %> <br>
+                    <%= doc.data().username; %> <br>
+                    <%= doc.data().timestamp.toDate(); %> <br>
+                    <br><br>
+                <% }); %>
+            <% } %>
+        </div>
+        <hr>
+        <div>
+            <label for="subject">Subject: </label>
+            <input type="text" id="subject" name="subject" required>
+        </div>
+        <div>
+            <label for="message">Message: </label>
+            <input type="text" id="message" name="message">
+        </div>
+        <div><button>Submit</button></div>
+    </form>
+</body>
+</html>
