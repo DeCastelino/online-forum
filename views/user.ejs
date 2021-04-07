@@ -30,6 +30,7 @@
     </form>
     <form action="/user" method="POST">
         <hr>
+
         <div>
             <% if (response != null) { %>
                 <% response.forEach(doc => { %>
@@ -37,7 +38,7 @@
                     <%= doc.data().message; %> <br>
                     <%= doc.data().username; %> <br>
                     <%= doc.data().timestamp.toDate(); %> <br>
-                    <button id="<%= doc.id %>">Edit</button>
+                    <a href="/editPost/<%= doc.id %>">Edit</a>
                     <br><br>
                 <% }); %>
             <% } %>

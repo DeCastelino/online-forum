@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./ServiceAccountKey.json");
 const session = require('express-session');
 const { response } = require("express");
+const { render } = require("ejs");
 
 app.use(session({ secret: 'secret', saveUninitialized: true, resave: false }));
 
@@ -163,6 +164,25 @@ app.post('/changePassword', (req, res) => {
     }
   });
 });
+
+app.get('/editPost/:id', (req, res) => {
+
+  db.collection('posts').doc(req.params.id).get().then((response) => {
+    if (response != null) {
+      res.render('editPost.ejs', { response , id: req.params.id })
+    }
+  })
+});
+
+app.post('/editPost/:id', (req, res) => {
+  db.collection('posts').doc(req.params.id).update({
+    subject: req.body.subject,
+    message: req.body.message,
+    timestamp: new Date()
+  }).then(() => {
+    res.redirect('/userArea')
+  })
+})
 
 app.use(express.static("public"));
 
