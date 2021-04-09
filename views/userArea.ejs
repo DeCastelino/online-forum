@@ -10,6 +10,7 @@
     <form action="/userArea" method="POST">
         <div class="sidenav">
             <a href="/user"><%= username %></a>
+            <img src="<%= imgURL %>" alt="user picture" width="120" height="120">
             <button type="logout" id="logout">Logout</button>
             <script>
                 document.getElementById('logout').onclick = function () {
@@ -37,6 +38,10 @@
         <div>
             <label for="message">Message: </label>
             <input type="text" id="message" name="message">
+        </div>
+        <div>
+            <label for="img">Select image:</label>
+            <input type="file" id="img" name="img" accept="image/*">
         </div>
         <div><button>Submit</button></div>
     </form>

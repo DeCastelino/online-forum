@@ -17,6 +17,10 @@
             <input type="message" id="message" name="message" value="<%= response.data().message %>">
         </div>
         <div>
+            <label for="img">Select image:</label>
+      <input type="file" id="img" name="img" accept="image/*" value="<% response.data().imgURL %>">
+        </div>
+        <div>
             <button id="submit">Submit</button>
         </div>
     </form>

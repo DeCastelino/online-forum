@@ -1,17 +1,34 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const app = express();
 const admin = require("firebase-admin");
 const serviceAccount = require("./ServiceAccountKey.json");
 const session = require('express-session');
 const { response } = require("express");
 const { render } = require("ejs");
+const {Storage} = require('@google-cloud/storage')
+const path = require('path')
+
+const app = express();
 
 app.use(session({ secret: 'secret', saveUninitialized: true, resave: false }));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
+const bucketName = 'online-forum-bucket';
+
+const projectId = 'project-alpha-101'
+const keyFilename = 'project-alpha-101-428f47dd974a.json'
+const storage = new Storage({projectId, keyFilename});
+
+
+async function uploadFile(filePath, destFileName) {
+  await storage.bucket(bucketName).upload(filePath, {
+    destination: destFileName,
+  });
+}
+
 
 const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true});
@@ -20,7 +37,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res) => {
-  res.render("index.ejs");
+  res.redirect('login');
 });
 
 app.get("/login", (req, res) => {
@@ -51,6 +68,7 @@ app.post("/login", (req, res) => {
     }else{
       response.forEach(doc => {
         req.session.username = doc.data().username;
+        req.session.imgURL = doc.data().imgURL;
       })
     }
     
@@ -103,11 +121,21 @@ app.post("/register", (req, res) => {
         res.render('register.ejs', { message: 'Username already exists'});
         return;
       }
+      const filePath = path.join(__dirname, './img/', req.body.img)
+      console.log(filePath);
+      const destFileName = req.body.img;
+
+      uploadFile(filePath, destFileName).catch(console.error);
+
+      // Create a reference to the file to generate link
+      var fileRef = storage.bucket(bucketName).file(destFileName);
+      const public_url = fileRef.publicUrl();
 
       users.add({
         userID: req.body.userID,
         username: req.body.username,
         password: req.body.password,
+        imgURL: public_url
       });
       // Redirecting to Login page
       res.redirect("/login");
@@ -118,7 +146,7 @@ app.post("/register", (req, res) => {
 
 app.get('/userArea', (req, res) => {
   db.collection('posts').orderBy('timestamp', 'desc').limit(10).get().then((response) => {
-    res.render('userArea.ejs', { username: req.session.username, response });
+    res.render('userArea.ejs', { username: req.session.username, imgURL: req.session.imgURL, response });
   })
 });
 
@@ -126,10 +154,21 @@ app.post('/userArea', (req, res) => {
   // Store post to database
   const postRef = db.collection('posts');
 
+  const filePath = path.join(__dirname, './img/', req.body.img)
+  console.log(filePath);
+  const destFileName = req.body.img;
+
+  uploadFile(filePath, destFileName).catch(console.error);
+
+  // Create a reference to the file to generate link
+  var fileRef = storage.bucket(bucketName).file(destFileName);
+  const imgURL = fileRef.publicUrl();
+
   postRef.add({
     subject: req.body.subject,
     message: req.body.message,
     username: req.session.username,
+    imgURL: imgURL,
     timestamp: new Date()
   });
   
