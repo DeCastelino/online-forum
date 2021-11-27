@@ -1,49 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User | Online Forum</title>
-</head>
-<body>
-    <form action="/changePassword" method="POST">
-        <script>
-            document.getElementById('changePassword').onclick = function () {
-                location.href = "/changePassword"
-            }
-        </script>
-        <div>
-            <label for="oldPassword">Old Password: </label>
-            <input type="password" id="oldPassword" name="oldPassword" required>
-        </div>
-        <div>
-            <label for="newPassword">New Password: </label>
-            <input type="password" id="newPassword" name="newPassword" required>
-        </div>
-        <div>
-            <button id="changePassword">Change Password</button>
-        </div>
-        <div>
-            <b><%= message %></b>
-        </div>
-    </form>
-    <form action="/user" method="POST">
-        <hr>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>User | Online Forum</title>
+    </head>
+    <body>
+        <form action="/changePassword" method="POST">
+            <script>
+                document.getElementById("changePassword").onclick =
+                    function () {
+                        location.href = "/changePassword";
+                    };
+            </script>
+            <div>
+                <label for="oldPassword">Old Password: </label>
+                <input
+                    type="password"
+                    id="oldPassword"
+                    name="oldPassword"
+                    required
+                />
+            </div>
+            <div>
+                <label for="newPassword">New Password: </label>
+                <input
+                    type="password"
+                    id="newPassword"
+                    name="newPassword"
+                    required
+                />
+            </div>
+            <div>
+                <button id="changePassword">Change Password</button>
+            </div>
+            <div>
+                <b><%= message %></b>
+            </div>
+        </form>
+        <form action="/user" method="POST">
+            <hr />
 
-        <div>
-            <% if (response != null) { %>
-                <% response.forEach(doc => { %>
-                    <b><%= doc.data().subject; %></b> <br>
-                    <%= doc.data().message; %> <br>
-                    <%= doc.data().username; %> <br>
-                    <%= doc.data().timestamp.toDate(); %> <br>
-                    <a href="/editPost/<%= doc.id %>">Edit</a>
-                    <br><br>
-                <% }); %>
-            <% } %>
-        </div>
-        <hr>
-    </form>
-</body>
+            <div>
+                <% if (response == null) { %>
+                <h2><%= noPosts %></h2>
+                <% } %> <% if (response != null) { %> <% response.forEach(doc =>
+                { %>
+                <b><%= doc.data().subject; %></b> <br />
+                <%= doc.data().message; %> <br />
+                <%= doc.data().username; %> <br />
+                <%= doc.data().timestamp.toDate(); %> <br />
+                <img
+                    src="<%= doc.data().postPicture %>"
+                    alt="picture"
+                    width="120"
+                    height="120"
+                /><br />
+                <a href="/editPost/<%= doc.id %>">Edit</a>
+                <br /><br />
+                <% }); } %>
+            </div>
+            <hr />
+        </form>
+    </body>
 </html>

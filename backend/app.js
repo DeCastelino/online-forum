@@ -2,7 +2,6 @@ const express = require("express");
 const admin = require("firebase-admin");
 const serviceAccount = require("./ServiceAccountKey.json");
 const session = require("express-session");
-// const { response } = require("express");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
 const multer = require("multer");
@@ -27,7 +26,6 @@ app.use(
         secret: "Its a secret",
         saveUninitialized: true,
         resave: false,
-        // cookie: { secure: true },
     })
 );
 
@@ -96,6 +94,7 @@ app.post("/login", async (req, res) => {
         return;
     }
     validUser.docs.forEach((doc) => {
+        req.session.userID = doc.data().userID;
         req.session.username = doc.data().username;
         req.session.profilePicture = doc.data().profilePicture;
     });
@@ -114,11 +113,13 @@ app.post("/register", upload.single("img"), async (req, res) => {
     // check if username exists
     const usernameResults = await checkUsernameExists(users, req.body.username);
 
-    if (userIdResult.notEmpty) {
+    if (!userIdResult.empty) {
         res.render("register.ejs", { message: "ID already exists" });
+        return;
     }
-    if (usernameResults.notEmpty) {
+    if (!usernameResults.empty) {
         res.render("register.ejs", { message: "Username already exists" });
+        return;
     }
 
     const absoluteFilePath = path.join(__dirname, "/" + req.file.path);
@@ -183,10 +184,6 @@ app.post("/userArea", upload.single("img"), (req, res) => {
     res.redirect("/userArea");
 });
 
-//-------------------------------------
-//DONE TILL HERE
-//-------------------------------------
-
 app.get("/user", async (req, res) => {
     const posts = await db
         .collection("posts")
@@ -194,35 +191,42 @@ app.get("/user", async (req, res) => {
         .orderBy("timestamp")
         .get();
 
-    if (posts != null)
+    if (posts.empty)
         res.render("user.ejs", {
-            message: `No posts by ${req.session.username}`,
+            noPosts: `No posts by ${req.session.username}`,
+            response: null,
+            message: " ",
         });
-    res.render("user.ejs", { message: " ", response });
+    res.render("user.ejs", { noPosts: null, response: posts, message: " " });
 });
 
 // called when user click change password from user page
-app.post("/changePassword", (req, res) => {
-    db.collection("users")
-        .where("username", "==", req.session.username)
-        .where("password", "==", req.body.oldPassword)
-        .get()
-        .then((response) => {
-            if (response != null) {
-                response.forEach((doc) => {
-                    db.collection("users").doc(doc.id).update({
-                        password: req.body.newPassword,
-                    });
-                });
-                res.redirect("login");
-            } else {
-                res.render("user.ejs", {
-                    message: "Old Password is incorrect",
-                    response: null,
-                });
-            }
+app.post("/changePassword", async (req, res) => {
+    const users = db.collection("users");
+    const validUser = await checkValidUser(
+        users,
+        req.session.userID,
+        req.body.oldPassword
+    );
+
+    if (validUser.empty) {
+        res.render("user.ejs", {
+            message: "Old Password is incorrect",
+            response: null,
+            noPosts: null,
         });
+    }
+    validUser.docs.forEach((doc) => {
+        users.doc(doc.id).update({
+            password: req.body.newPassword,
+        });
+    });
+    res.redirect("login");
 });
+
+//-------------------------------------
+//DONE TILL HERE
+//-------------------------------------
 
 app.get("/editPost/:id", (req, res) => {
     db.collection("posts")
