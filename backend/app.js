@@ -7,14 +7,30 @@ const path = require("path");
 const multer = require("multer");
 var multerStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "img/");
+        cb(null, "./public/uploads/");
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalname); //Appending extension
+        cb(null, Date.now() + "-" + path.extname(file.originalname)); //Appending extension
     },
 });
 
+// Init Upload
 var upload = multer({ storage: multerStorage });
+
+// Check File Type
+function checkFileType(file) {
+    // Allowed extensions
+    const allowedExtensions = /jpeg|jpg|png|gif/;
+    // Check extension
+    const extname = allowedExtensions.test(
+        path.extname(file.originalname).toLowerCase()
+    );
+    // Check mime
+    const mimetype = allowedExtensions.test(file.mimetype);
+
+    if (extname && mimetype) return true;
+    return false;
+}
 
 require("dotenv").config({ path: "../config.env" });
 
@@ -121,6 +137,13 @@ app.post("/register", upload.single("img"), async (req, res) => {
         res.render("register.ejs", { message: "Username already exists" });
         return;
     }
+    // Checking for valid image extensions
+    if (checkFileType(req.file)) {
+        res.render("register.ejs", {
+            message: "Image does not meet the requirements",
+        });
+        return;
+    }
 
     const absoluteFilePath = path.join(__dirname, "/" + req.file.path);
     const destFileName = req.file.filename;
@@ -162,6 +185,7 @@ app.post("/userArea", upload.single("img"), (req, res) => {
     // Store post to database
     const posts = db.collection("posts");
     if (req.file !== undefined) {
+        // Create a checking system to check file extensions using the already existing function.
         const absoluteFilePath = path.join(__dirname, "/" + req.file.path);
         const destFileName = req.file.filename;
 
@@ -188,7 +212,7 @@ app.get("/user", async (req, res) => {
     const posts = await db
         .collection("posts")
         .where("username", "==", req.session.username)
-        .orderBy("timestamp")
+        .orderBy("timestamp", "desc")
         .get();
 
     if (posts.empty)
@@ -228,31 +252,24 @@ app.post("/changePassword", async (req, res) => {
 //DONE TILL HERE
 //-------------------------------------
 
-app.get("/editPost/:id", (req, res) => {
-    db.collection("posts")
-        .doc(req.params.id)
-        .get()
-        .then((response) => {
-            if (response != null) {
-                res.render("editPost.ejs", { response, id: req.params.id });
-            }
-        });
+app.get("/editPost/:id", async (req, res) => {
+    const posts = await db.collection("posts");
+    const postToEdit = await posts.doc(req.params.id).get();
+    if (postToEdit === null) return;
+    res.render("editPost.ejs", { response: postToEdit, id: req.params.id });
 });
 
-app.post("/editPost/:id", (req, res) => {
-    db.collection("posts")
-        .doc(req.params.id)
-        .update({
-            subject: req.body.subject,
-            message: req.body.message,
-            timestamp: new Date(),
-        })
-        .then(() => {
-            res.redirect("/userArea");
-        });
+app.post("/editPost/:id", async (req, res) => {
+    const posts = await db.collection("posts");
+    const editedPost = await posts.doc(req.params.id).update({
+        subject: req.body.subject,
+        message: req.body.message,
+        timestamp: new Date(),
+    });
+    res.redirect("/userArea");
 });
 
-app.use(express.static("public"));
+app.use(express.static("./public"));
 
 app.listen(process.env.PORT, () => {
     console.log(`listening on http://localhost:${process.env.PORT}`);
