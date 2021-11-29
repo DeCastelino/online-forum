@@ -1,5 +1,6 @@
 node_modules
 img
+public
 ServiceAccountKey.json
 project-online-forum-abef9ee5184b.json
 config.env

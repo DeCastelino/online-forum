@@ -5,32 +5,7 @@ const session = require("express-session");
 const { Storage } = require("@google-cloud/storage");
 const path = require("path");
 const multer = require("multer");
-var multerStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "./public/uploads/");
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + "-" + path.extname(file.originalname)); //Appending extension
-    },
-});
-
-// Init Upload
-var upload = multer({ storage: multerStorage });
-
-// Check File Type
-function checkFileType(file) {
-    // Allowed extensions
-    const allowedExtensions = /jpeg|jpg|png|gif/;
-    // Check extension
-    const extname = allowedExtensions.test(
-        path.extname(file.originalname).toLowerCase()
-    );
-    // Check mime
-    const mimetype = allowedExtensions.test(file.mimetype);
-
-    if (extname && mimetype) return true;
-    return false;
-}
+const { upload, checkFileType } = require("./middleware/multer");
 
 require("dotenv").config({ path: "../config.env" });
 
@@ -138,7 +113,7 @@ app.post("/register", upload.single("img"), async (req, res) => {
         return;
     }
     // Checking for valid image extensions
-    if (checkFileType(req.file)) {
+    if (!checkFileType(req.file)) {
         res.render("register.ejs", {
             message: "Image does not meet the requirements",
         });
